@@ -19,8 +19,7 @@
 .fanfare-img{
   position: absolute;
   z-index: 1;
-  transform: rotate(45deg);
-  top: 1050px;
+  transform: rotate(90deg);
   left: 460px;
 }
 

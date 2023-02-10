@@ -16,6 +16,7 @@ function ProjectHeader() {
   const [mode, setMode] = useState(0)
   const userSeq = sessionStorage.getItem('userSeq')
   const projectSeq = parseInt(location.state.projectSeq)
+  console.log(projectSeq)
 
   const [project, setProject] = useState([])
 
@@ -31,37 +32,27 @@ function ProjectHeader() {
     })
       .then((res) => {
         setProject(res.data.body)
+        setMember(res.data.body.projectUserList)
+        console.log(res.data.body)
       })
       .catch((e) => {
         console.log(e)
       })
   }
   const [member, setMember] = useState([])
-  const getProjectMember = async () => {
-    await api({
-      url: process.env.REACT_APP_API_URL + '/project/member/' + projectSeq,
-      method: 'GET',
-    })
-      .then((res) => {
-        setMember(res.data.body.projectUserList)
-      })
-      .catch((e) => {
-        console.log(e)
-      })
-  }
   const memberList = []
   Array.from(member).forEach((item) => {
     memberList.push({
       userSeq: item.userSeq,
       nickname: item.nickname,
-      profileImageUrl: item.profileImageUrl,
+      userImageUrl: item.userImageUrl.url,
+      projectUserSeq: item.projectUserSeq,
     })
   })
   console.log(memberList)
 
   useEffect(() => {
     getProject()
-    getProjectMember()
   }, [])
 
   const handleToSetting = () => setMode(1)
@@ -105,7 +96,7 @@ function ProjectHeader() {
                 <div className="project-detail-team-detail-list">
                   {memberList.map((item, index) => (
                     <div className="project-detail-team" key={index}>
-                      <img src={process.env.REACT_APP_API_URL + item.profileImageUrl} alt={noProfile} />
+                      <img src={process.env.REACT_APP_API_URL + item.userImageUrl} alt={noProfile} />
                       <div>{item.nickname}</div>
                     </div>
                   ))}
