@@ -73,8 +73,9 @@ const themeOptions = [
 ]
 
 const projectMeetingSetting = () => {
-  socket = io('https://meeting.ssafysignal.site', { secure: true, cors: { origin: '*' } })
-  // socket = io('https://localhost:443', { secure: true, cors: { origin: '*' } })
+  // socket = io('https://meeting.ssafysignal.site', { secure: true, cors: { origin: '*' } })
+  console.log(process.env.REACT_APP_API_URL, ',', process.env.MEDIA_SERVER_URL)
+  socket = io('https://localhost:443', { secure: true, cors: { origin: '*' } })
   console.log('프로젝트 미팅 소켓 통신 시작!')
 
   pcConfig = {
@@ -174,7 +175,7 @@ function ProjectMeeting() {
 
     // 처음 방에 접속했을 때, 이미 방안에 들어와있던 user들의 정보를 받음
     socket.on('all_users', (data) => {
-      console.log('all_users : ', data.users)
+      // console.log('all_users : ', data.users)
       allUsersHandler(data) // 미리 접속한 유저들의 영상을 받기위한 pc, offer 생성
 
       // 이미 해당 방이 화면 공유 중이면 화면 공유 받음
@@ -233,14 +234,14 @@ function ProjectMeeting() {
 
     // 화면 공유 가능하다는 허락받음
     socket.on('share_ok', (data) => {
-      console.log('화면 공유 가능')
+      // console.log('화면 공유 가능')
       shareStart()
     })
 
     // 다른 유저가 화면공유를 시작함
     socket.on('share_request', (data) => {
       shareRequestHandler(data)
-      console.log('공유 request 받음!!', data)
+      // console.log('공유 request 받음!!', data)
     })
 
     // 다른 유저가 화면공유 중지함
@@ -311,7 +312,6 @@ function ProjectMeeting() {
       version = data.version
       const content = data.content
       // console.log('rollback_editor', content)
-      // console.log('cursor', codemirror.getCursor())
       const cursor = codemirror.getCursor()
       codemirror.setValue(content)
       codemirror.setCursor({ line: cursor.line, ch: cursor.ch })
@@ -321,7 +321,7 @@ function ProjectMeeting() {
   // =============================================================================================
 
   function meetingStart() {
-    console.log('meetingStart 실행')
+    // console.log('meetingStart 실행')
 
     navigator.mediaDevices
       .getUserMedia({
@@ -377,20 +377,13 @@ function ProjectMeeting() {
           userName: myName,
         })
         if (error.name === 'NotFoundError') {
-          // alert('카메라 또는 마이크가 인식되지 않습니다.')
-          // window.close()
+          console.log('카메라 또는 마이크가 인식되지 않습니다.')
         } else if (error.name === 'NotAllowedError') {
-          // alert(
-          //   '카메라 및 마이크 접근 권한이 없습니다. \n더보기 구성 > 설정 > 개인정보 및 보안 > 사이트 설정에서 접근 권한을 부여해주세요'
-          // )
+          console.log('카메라 및 마이크 접근 권한이 없습니다.')
         } else {
           console.log(error.name)
         }
         setMode(1)
-        /* if (!alert('카메라(또는 마이크)가 없거나 권한이 없습니다')) {
-          // window.location = '..'
-          // window.close()
-        } */
       })
   }
 
@@ -564,7 +557,7 @@ function ProjectMeeting() {
 
   // 유저별 stream을 video에 넣어줌(화면에 영상 띄움)
   function userOntrackHandler(stream, userName, senderSocketId) {
-    console.log('접속자 이름:', userName)
+    // console.log('접속자 이름:', userName)
     setPersonList((personList) => [...personList, userName])
 
     setStreams((streams) => {
@@ -621,7 +614,7 @@ function ProjectMeeting() {
 
       removeUserVideo(socketId, userName)
 
-      console.log('나간사람 이름:', userName)
+      // console.log('나간사람 이름:', userName)
     } catch (e) {
       console.error(e)
     }
@@ -629,7 +622,6 @@ function ProjectMeeting() {
   // ============================================================================
 
   function shareCheck() {
-    // console.log('shareCheck실행됨!!')
     if (shareUserName !== '') return
     socket.emit('share_check')
   }
@@ -713,7 +705,7 @@ function ProjectMeeting() {
     shareVideo.srcObject = stream
   }
 
-  // 페인트보드===================================================================================
+  // =====================페인트보드===================================================================================
   function stopPainting() {
     if (!isPainting) return
     // console.log('그리기 종료')
@@ -878,8 +870,6 @@ function ProjectMeeting() {
     codemirror.on('change', (instance, changes) => {
       const { origin } = changes
       const content = instance.getValue()
-      // console.log('변화 상태:', origin)
-      // console.log('change:  ', changes)
 
       // input이면 입력, setValue는 받음, delete삭제, 한글은 *compose
       if (origin !== undefined && origin !== 'setValue') {
