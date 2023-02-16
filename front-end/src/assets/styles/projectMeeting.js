@@ -4,19 +4,27 @@ export const videoList = (props) => {
   return css`
     display: ${props.mode === 0 ? 'flex' : 'none'};
     flex-wrap: wrap;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    overflow: auto;
+    margin-top: 30px;
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #9a93c5;
+      border-radius: 10px;
+      background-clip: padding-box;
+      border: 2px solid transparent;
+    }
   `
 }
 
 export const codeEidt = (props) => {
   return css`
     display: ${props.mode === 1 ? 'block' : 'none'};
-    border: 1px solid black;
-    height: 95%;
-    width: 90%;
-    margin: auto;
-    /* font-family: 'D2coding' !important; */
+    height: 100%;
+    width: 100%;
   `
 }
 

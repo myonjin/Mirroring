@@ -8,22 +8,28 @@
 .back-lottie-left{
   position: absolute;
   object-fit: fill;
-  z-index: -1;
   left: 0;
 }
 
 .back-lottie-right{
   position: absolute;
   object-fit: fill;
-  z-index: -1;
   right: 0;
+}
+
+.signal-rank-back{
+  width: 100%;
+  height: 100%;
+  background-color: #272d41;
 }
 
 .signal-rank-container{
   width: 1125px;
-  height: 100%;
-  background-color: #272d41;
-  margin: 0px auto;
+  margin: auto;
+  z-index: 3;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .signal-rank-header{
@@ -79,9 +85,10 @@
   display: flex;
   width: 281px;
   height: 223px;
-  padding: 21px;
+  padding: 15px 10px;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
 }
 
 .signal-rank-1st-img {
@@ -115,6 +122,11 @@
   justify-content: space-between;
   margin: 100px;
 }
+
+.signal-rank-img{
+  margin-bottom: 30px;
+}
+
 /* 시그널 위크 수상작 리스트 */
 .signal-rank-list-container {
   width: 100%;

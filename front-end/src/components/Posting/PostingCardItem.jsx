@@ -11,10 +11,10 @@ export default function PostingCardItem({ post }) {
   return (
     <Card
       sx={{
-        minWidth: 275,
-        maxWidth: 275,
+        width: '22.5%',
+        ml: 1.5,
         mb: 2,
-        mr: 2,
+        mr: 1,
         '&:hover': {
           boxShadow: '0 0 0 2px #bcb7d9',
           cursor: 'pointer',

@@ -40,15 +40,24 @@ function Signalregister() {
   })
   const [userProjectList, setUserProjectList] = useState()
   const [file, setFile] = useState(null)
-  // console.log(file)
   const handleChangeFile = (event) => {
-    console.log(event.target.files[0])
     setFile(event.target.files[0])
+    const maxFileSize = 100 * 1024 * 1024
+    const selectedFile = event.target.files[0]
+    const fileExtension = selectedFile.name.split('.').pop().toLowerCase()
+
+    if (selectedFile.size > maxFileSize) {
+      alert('파일 크기가 너무 큽니다.')
+      event.target.value = null // input 요소 초기화
+    } else if (fileExtension !== 'pdf') {
+      alert('PDF 파일만 업로드 가능합니다.')
+      event.target.value = null // input 요소 초기화
+    } else {
+      setFile(selectedFile)
+    }
   }
   const [file2, setFile2] = useState(null)
-  // console.log(file)
   const handleChangeFile2 = (event) => {
-    console.log(event.target.files)
     setFile2(event.target.files[0])
   }
   const [alertOpen, setAlertOpen] = useState(false)
@@ -56,7 +65,6 @@ function Signalregister() {
     const { name, value } = e.target
     const nextInputs = { ...inputs, [name]: value }
     setInputs(nextInputs)
-    console.log(nextInputs, '22')
   }
   const handlesignalRegist = () => {
     const formData = new FormData()
@@ -68,11 +76,6 @@ function Signalregister() {
     formData.append('pptFile', file)
     formData.append('content', inputs.content)
     formData.append('readmeFile', file2)
-    console.log(formData)
-    console.log(JSON.stringify(formData))
-    for (const key of formData.keys()) {
-      console.log(key, ':', formData.get(key))
-    }
     api
       .post(process.env.REACT_APP_API_URL + '/signalweek', formData, {
         headers: {
@@ -80,14 +83,12 @@ function Signalregister() {
         },
       })
       .then((res) => {
-        console.log(res, '성공')
+        console.log(res)
         setAlertOpen(true)
       })
       .catch((res) => {
-        console.log(res, '실패 ')
         console.log(formData)
       })
-    console.log(FormData)
   }
   const handleAlert = (e) => {
     setAlertOpen(false)
@@ -97,7 +98,6 @@ function Signalregister() {
   const getuserproject = async () => {
     await api.get(process.env.REACT_APP_API_URL + '/project/' + userSeq).then((res) => {
       const endPro = [...res.data.body.ingProjectList, ...res.data.body.endProjectList]
-      console.log(endPro)
       setUserProjectList(endPro)
       const copy = endPro[0].projectSeq
       setInputs({ ...inputs, projectSeq: copy })
