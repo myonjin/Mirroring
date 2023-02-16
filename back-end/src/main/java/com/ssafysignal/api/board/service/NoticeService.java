@@ -1,8 +1,6 @@
 package com.ssafysignal.api.board.service;
 
-import com.ssafysignal.api.board.dto.request.QnaRegistRequest;
 import com.ssafysignal.api.board.entity.Notice;
-import com.ssafysignal.api.board.entity.Qna;
 import com.ssafysignal.api.board.repository.*;
 import com.ssafysignal.api.global.exception.NotFoundException;
 import com.ssafysignal.api.global.response.ResponseCode;
@@ -29,7 +27,6 @@ public class NoticeService {
         Page<Notice> noticeList = noticeRepository.findAll(PageRequest.of(page - 1, size, Sort.Direction.DESC, "noticeSeq"));
         return noticeList;
     }
-
 
     @Transactional
     public Notice findNotice(Integer noticeSeq) throws NotFoundException {

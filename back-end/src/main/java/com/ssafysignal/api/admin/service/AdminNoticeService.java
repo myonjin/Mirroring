@@ -1,6 +1,6 @@
 package com.ssafysignal.api.admin.service;
 
-import com.ssafysignal.api.admin.dto.Request.BasicAdminNoticeRequest;
+import com.ssafysignal.api.admin.dto.request.BasicAdminNoticeRequest;
 import com.ssafysignal.api.board.entity.Notice;
 import com.ssafysignal.api.board.repository.NoticeRepository;
 import com.ssafysignal.api.global.exception.NotFoundException;
@@ -22,7 +22,6 @@ public class AdminNoticeService {
                 .content(basicAdminNoticeRequest.getContent())
                 .build());
     }
-
     @Transactional
     public void modifyNotice(Integer noticeSeq, BasicAdminNoticeRequest basicAdminNoticeRequest) throws RuntimeException {
         Notice notice = noticeRepository.findById(noticeSeq)
@@ -33,7 +32,6 @@ public class AdminNoticeService {
 
         noticeRepository.save(notice);
     }
-
     @Transactional
     public void deleteNotice(Integer noticeSeq) throws RuntimeException {
         Notice notice = noticeRepository.findById(noticeSeq)

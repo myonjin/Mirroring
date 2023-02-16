@@ -36,7 +36,7 @@ public class SecurityConfig {
                 // 세분화 되어있을수록 위쪽에 위치해야한다.
                 .authorizeRequests()
 
-                /*.antMatchers("/user").permitAll()
+                .antMatchers("/user").permitAll()
                 .antMatchers("/user/**").hasAnyAuthority("USER","ADMIN")
 
                 .antMatchers("/auth/logout").hasAnyAuthority("USER","ADMIN")
@@ -61,14 +61,14 @@ public class SecurityConfig {
 
                 .antMatchers("/letter","/letter/**").hasAnyAuthority("USER","ADMIN")
 
-                .antMatchers("/signalweek","/signalweek/rank").permitAll()
+                .antMatchers("/signalweek","/signalweek/rank", "/signalweek/signalweekmain", "/signalweek/signalweekdate", "/signalweek/signalweekschedule").permitAll()
                 .antMatchers("/signalweek/**").hasAnyAuthority("USER","ADMIN")
 
 
                 .antMatchers("/board/notice","/board/notice/**").permitAll()
 
                 .antMatchers(HttpMethod.GET,"/board/qna/**","/board/qna").permitAll()
-                .antMatchers("/board/qna/**","/board/qna").hasAnyAuthority("USER","ADMIN")*/
+                .antMatchers("/board/qna/**","/board/qna").hasAnyAuthority("USER","ADMIN")
 
                 .antMatchers("/admin/**").hasAnyAuthority("ADMIN")
                 .anyRequest().permitAll()

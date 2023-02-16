@@ -1,10 +1,11 @@
 package com.ssafysignal.api.apply.controller;
 
 
-import com.ssafysignal.api.apply.dto.Request.ApplyBasicRequest;
-import com.ssafysignal.api.apply.dto.Request.ApplyMemoRequest;
-import com.ssafysignal.api.apply.dto.Response.ApplyApplyerFindResponse;
-import com.ssafysignal.api.apply.dto.Response.ApplyFindResponse;
+import com.ssafysignal.api.apply.dto.request.BasicApplyRequest;
+import com.ssafysignal.api.apply.dto.request.ApplyMemoRequest;
+import com.ssafysignal.api.apply.dto.response.FindApplyApplyerResponse;
+import com.ssafysignal.api.apply.dto.response.FindApplyResponse;
+import com.ssafysignal.api.apply.entity.Apply;
 import com.ssafysignal.api.apply.service.ApplyService;
 import com.ssafysignal.api.global.exception.NotFoundException;
 import com.ssafysignal.api.global.response.BasicResponse;
@@ -30,9 +31,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/apply")
 public class ApplyController {
-
     private final ApplyService applyService;
-
     @Tag(name = "지원")
     @Operation(summary = "지원서 등록",  description = "지원서를 등록한다.")
     @ApiResponses({
@@ -41,7 +40,7 @@ public class ApplyController {
             @ApiResponse(responseCode = "401", description = "로그인 필요")})
     @PostMapping("/{postingSeq}")
     private ResponseEntity<BasicResponse> registApply(@Parameter(name = "postingSeq", description = "공고 Seq", required = true) @PathVariable("postingSeq") Integer postingSeq,
-                                                      @Parameter(description = "지원서 작성을 위한 정보", required = true) @RequestBody ApplyBasicRequest applyRegistRequest) {
+                                                      @Parameter(description = "지원서 작성을 위한 정보", required = true) @RequestBody BasicApplyRequest applyRegistRequest) {
         log.info("regeistApply - Call");
 
         try {
@@ -53,8 +52,6 @@ public class ApplyController {
             return ResponseEntity.badRequest().body(BasicResponse.Body(ResponseCode.REGIST_FAIL, null));
         }
     }
-
-    
     @Tag(name = "지원")
     @Operation(summary = "지원서 수정", description = "지원서를 수정한다.")
     @ApiResponses({
@@ -64,11 +61,11 @@ public class ApplyController {
             @ApiResponse(responseCode = "403", description = "권한 없음")})
     @PutMapping("/{applySeq}")
     private ResponseEntity<BasicResponse> modifyApply(@Parameter(name = "applySeq", description = "지원서 Seq", required = true) @PathVariable(name = "applySeq") Integer applySeq,
-                                                      @Parameter(description = "지원서 수정 정보", required = true) @RequestBody ApplyBasicRequest applyBasicRequest) {
+                                                      @Parameter(description = "지원서 수정 정보", required = true) @RequestBody BasicApplyRequest basicApplyRequest) {
     	
         log.info("modifyApply - Call");
-        System.out.println(applyBasicRequest);
-        applyService.modifyApply(applyBasicRequest, applySeq);
+        System.out.println(basicApplyRequest);
+        applyService.modifyApply(basicApplyRequest, applySeq);
         try {
             return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, null));
         }
@@ -80,8 +77,6 @@ public class ApplyController {
             return ResponseEntity.badRequest().body(BasicResponse.Body(ResponseCode.MODIFY_FAIL, null));
         }
     }
-
-    
     @Tag(name = "지원")
     @Operation(summary = "지원서 상세 조회", description = "지원서 상세 정보를 조회한다.")
     @ApiResponses({
@@ -95,13 +90,12 @@ public class ApplyController {
         log.info("findApply - Call");
 
         try {
-            ApplyFindResponse res = applyService.findApply(applySeq);
+            FindApplyResponse res = applyService.findApply(applySeq);
             return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, res));
         } catch (NotFoundException e){
             return ResponseEntity.badRequest().body(BasicResponse.Body(e.getErrorCode(), null));
         }
     }
-
     @Tag(name = "지원")
     @Operation(summary = "지원서 삭제", description = "지원서를 삭제한다.")
     @ApiResponses({
@@ -123,7 +117,6 @@ public class ApplyController {
             return ResponseEntity.badRequest().body(BasicResponse.Body(ResponseCode.DELETE_FAIL, null));
         }
     }
-
     @Tag(name = "지원")
     @Operation(summary = "작성자 지원서 목록 조회", description = "작성자 기준으로 지원서 목록을 조회한다.")
     @ApiResponses({
@@ -144,7 +137,6 @@ public class ApplyController {
             return ResponseEntity.badRequest().body(BasicResponse.Body(e.getErrorCode(), null));
         }
     }
-
     @Tag(name = "지원")
     @Operation(summary = "작성자 지원서 갯수 조회", description = "작성자 기준으로 지원서 갯수 조회한다.")
     @ApiResponses({
@@ -163,7 +155,6 @@ public class ApplyController {
             return ResponseEntity.badRequest().body(BasicResponse.Body(e.getErrorCode(), null));
         }
     }
-
     @Tag(name = "지원")
     @Operation(summary = "지원자 지원서 목록 조회", description = "지원자 기준으로 지원서 목록을 조회한다.")
     @ApiResponses({
@@ -178,13 +169,12 @@ public class ApplyController {
         log.info("findAllApplyApplyer - Call");
 
         try {
-            List<ApplyApplyerFindResponse> applyList = applyService.findAllApplyApplyer(userSeq, page, size);
-            return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, applyList));
+            List<Apply> applyList = applyService.findAllApplyApplyer(userSeq, page, size);
+            return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, FindApplyApplyerResponse.toList(applyList)));
         } catch (NotFoundException e){
             return ResponseEntity.badRequest().body(BasicResponse.Body(e.getErrorCode(), null));
         }
     }
-
     @Tag(name = "지원")
     @Operation(summary = "지원자 지원서 갯수 조회", description = "지원자 기준으로 지원서 갯수를 조회한다.")
     @ApiResponses({
@@ -203,8 +193,6 @@ public class ApplyController {
             return ResponseEntity.badRequest().body(BasicResponse.Body(e.getErrorCode(), null));
         }
     }
-
-
     @Tag(name = "지원")
     @Operation(summary = "지원서 메모 등록", description = "지원서 메모 등록한다.")
     @ApiResponses({
@@ -217,8 +205,7 @@ public class ApplyController {
         log.info("modifyApplyMemo - Call");
 
         try {
-            log.info(applyMemoRequest.toString());
-        //할것!
+            applyService.modifyApplyMemo(applyMemoRequest);
             return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, null));
         } catch (NotFoundException e){
             return ResponseEntity.badRequest().body(BasicResponse.Body(e.getErrorCode(), null));
@@ -226,7 +213,6 @@ public class ApplyController {
             return ResponseEntity.badRequest().body(BasicResponse.Body(ResponseCode.MODIFY_FAIL, null));
         }
     }
-
     @Tag(name = "지원")
     @Operation(summary = "지원서 메모 조회", description = "지원서 메모 조회한다..")
     @ApiResponses({

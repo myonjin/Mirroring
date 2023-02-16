@@ -11,10 +11,11 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
+@Builder
+@AllArgsConstructor
 @Table(name = "signalweek_vote")
 public class SignalweekVote {
     @Id
@@ -31,11 +32,6 @@ public class SignalweekVote {
     @Column(name = "reg_dt")
     private LocalDateTime regDt;
 
-    @Builder
-    public SignalweekVote(Integer signalweekVoteSeq, Integer signalweekSeq, Integer fromUserSeq, LocalDateTime regDt) {
-        this.signalweekVoteSeq = signalweekVoteSeq;
-        this.signalweekSeq = signalweekSeq;
-        this.fromUserSeq = fromUserSeq;
-        this.regDt = regDt;
-    }
+    @Column(name = "signalweek_schedule_seq")
+    private Integer signalweekScheduleSeq;
 }

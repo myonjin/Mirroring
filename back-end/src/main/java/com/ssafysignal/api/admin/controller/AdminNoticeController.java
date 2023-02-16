@@ -1,6 +1,6 @@
 package com.ssafysignal.api.admin.controller;
 
-import com.ssafysignal.api.admin.dto.Request.BasicAdminNoticeRequest;
+import com.ssafysignal.api.admin.dto.request.BasicAdminNoticeRequest;
 import com.ssafysignal.api.admin.service.AdminNoticeService;
 import com.ssafysignal.api.global.exception.NotFoundException;
 import com.ssafysignal.api.global.response.BasicResponse;
@@ -21,9 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/admin/notice")
 public class AdminNoticeController {
-
     private final AdminNoticeService adminNoticeService;
-
     @Tag(name = "관리자")
     @Operation(summary = "공지사항 등록", description = "공지사항을 등록한다.")
     @ApiResponses({

@@ -10,7 +10,7 @@ import com.ssafysignal.api.common.service.EmailService;
 import com.ssafysignal.api.common.service.FileService;
 import com.ssafysignal.api.global.exception.NotFoundException;
 import com.ssafysignal.api.global.response.ResponseCode;
-import com.ssafysignal.api.user.dto.request.UserInfo;
+import com.ssafysignal.api.user.dto.request.ModifyUserRequest;
 import com.ssafysignal.api.user.dto.request.RegistUserRequest;
 import com.ssafysignal.api.user.entity.User;
 import com.ssafysignal.api.user.repository.UserRepository;
@@ -19,12 +19,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -42,8 +39,6 @@ public class UserService {
 
     @Value("${server.host}")
     private String host;
-    @Value("${server.port}")
-    private Integer port;
     @Value("${app.fileUpload.uploadPath.userImage}")
     private String imageUploadPath;
     @Value("${app.fileUpload.uploadPath}")
@@ -92,8 +87,7 @@ public class UserService {
                         .content("아래 버튼을 클릭하여 이메일을 인증해주세요.")
                         .text("이메일 인증")
                         .host(host)
-                        .port(port)
-                        .url(String.format("/auth/emailauth/%s", authCode))
+                        .url(String.format("/api/auth/emailauth/%s", authCode))
                         .build());
     }
     
@@ -105,15 +99,13 @@ public class UserService {
     }
     
     @Transactional
-    public void modifyUser(int userSeq, UserInfo userInfo) throws RuntimeException, IOException {
+    public void modifyUser(int userSeq, ModifyUserRequest modifyUserRequest) throws RuntimeException, IOException {
     	User user = userRepository.findByUserSeq(userSeq)
     			.orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND));
 
-        System.out.println("userInfo = " + userInfo);
-
-        if(userInfo.getProfileImageFile() != null) {
+        if(modifyUserRequest.getProfileImageFile() != null) {
             // 이미지 파일 업로드
-            ImageFile imageFile = fileService.registImageFile(userInfo.getProfileImageFile(), imageUploadPath);
+            ImageFile imageFile = fileService.registImageFile(modifyUserRequest.getProfileImageFile(), imageUploadPath);
             // 이미 존재하는 이미지가 있으면 삭제
             if (user.getImageFile().getImageFileSeq() != 0) {
                 // 물리 사진 파일 삭제
@@ -134,7 +126,8 @@ public class UserService {
                 user.setUserImageFileSeq(newImageFile.getImageFileSeq());
             }
         }
-        user.modifyUser( userInfo.getNickname(), userInfo.getPhone());
+        user.setNickname(modifyUserRequest.getNickname());
+        user.setPhone(modifyUserRequest.getPhone());
         userRepository.save(user);
     }
 

@@ -10,18 +10,10 @@ import com.ssafysignal.api.profile.repository.UserHeartLogRepository;
 import com.ssafysignal.api.project.entity.Project;
 import com.ssafysignal.api.project.entity.ProjectUser;
 import com.ssafysignal.api.project.repository.ProjectRepository;
-import com.ssafysignal.api.signalweek.dto.request.SignalweekVoteRequest;
-import com.ssafysignal.api.signalweek.dto.response.SignalweekFindAllResponse;
-import com.ssafysignal.api.signalweek.dto.response.SignalweekFindResponse;
-import com.ssafysignal.api.signalweek.dto.response.SignalweekRankFindResponse;
-import com.ssafysignal.api.signalweek.entity.Signalweek;
-import com.ssafysignal.api.signalweek.entity.SignalweekRank;
-import com.ssafysignal.api.signalweek.entity.SignalweekSchedule;
-import com.ssafysignal.api.signalweek.entity.SignalweekVote;
-import com.ssafysignal.api.signalweek.repository.SignalweekRankRepository;
-import com.ssafysignal.api.signalweek.repository.SignalweekRepository;
-import com.ssafysignal.api.signalweek.repository.SignalweekScheduleRepository;
-import com.ssafysignal.api.signalweek.repository.SignalweekVoteRepository;
+import com.ssafysignal.api.signalweek.dto.request.RegistSignalweekVoteRequest;
+import com.ssafysignal.api.signalweek.dto.response.*;
+import com.ssafysignal.api.signalweek.entity.*;
+import com.ssafysignal.api.signalweek.repository.*;
 import com.ssafysignal.api.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +40,7 @@ public class SignalweekService {
     private final SignalweekVoteRepository signalweekVoteRepository;
     private final ProjectRepository projectRepository;
     private final FileService fileService;
+    private final SignalweekVoteHistoryRepository signalweekVoteHistoryRepository;
 
     @Value("${app.fileUpload.uploadPath.ppt}")
     private String pptUploadDir;
@@ -53,14 +49,12 @@ public class SignalweekService {
     private final SignalweekRankRepository signalweekRankRepository;
     private final UserHeartLogRepository userHeartLogRepository;
 
-
     // 등록
     @Transactional
     public void registSinalweek(HashMap<String, Object> signalweekRegistRequest, MultipartFile pptFile, MultipartFile readmeFile) throws IOException {
         Project project = projectRepository.findById((Integer) signalweekRegistRequest.get("projectSeq")).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND));
         // 이미 있던 경우
         if (signalweekRepository.findByProject(project).isPresent()) {
-            System.out.println("이미 있던 경우로 넘어옴");
             Signalweek signalweek = signalweekRepository.findByProject(project).get();
             if (!pptFile.isEmpty()) {
                 // 피피티올리고
@@ -106,22 +100,21 @@ public class SignalweekService {
 
             // 처음 생성인 경우
         } else {
-            System.out.println("처음 생성으로 넘어옴");
             ProjectFile registPptFile = null;
-            if (pptFile.getSize() >= 1) {
+            if (pptFile != null && pptFile.getSize() > 0) {
                 registPptFile = fileService.registFile(pptFile, pptUploadDir);
                 projectfileRepository.save(registPptFile);
             }
 
             ProjectFile registReadmeFile = null;
-            if (readmeFile.getSize() >= 1) {
+            if (readmeFile != null && readmeFile.getSize() > 0) {
                 registReadmeFile = fileService.registFile(readmeFile, readmeUploadDir);
                 projectfileRepository.save(registReadmeFile);
             }
 
-
-            List<SignalweekSchedule> signalweekScheduleList = signalweekScheduleRepository.findTop1ByOrderByRegDtAsc();
-            SignalweekSchedule signalweekSchedule = signalweekScheduleList.get(0);
+            LocalDate now = LocalDate.now();
+            SignalweekSchedule signalweekSchedule = signalweekScheduleRepository.findByDate(now)
+                    .orElseThrow(() -> new NotFoundException(ResponseCode.REGIST_NOT_FOUNT));
 
             Signalweek signalweek = Signalweek.builder()
                     .signalweekScheduleSeq(signalweekSchedule.getSignalweekScheduleSeq())
@@ -137,73 +130,87 @@ public class SignalweekService {
             signalweekRepository.save(signalweek);
         }
     }
-
-
     // 목록 조회
     @Transactional(readOnly = true)
-    public SignalweekFindAllResponse findAllSignalweek(Integer page, Integer size, String searchKeyword) {
-        Page<Signalweek> signalweekList = signalweekRepository.findByTitleContaining(searchKeyword, PageRequest.of(page - 1, size, Sort.Direction.ASC, "signalweekSeq"));
+    public FindAllSignalweekResponse findAllSignalweek(Integer page, Integer size, String searchKeyword) {
 
-        SignalweekFindAllResponse signalweekFindAllResponse = SignalweekFindAllResponse.fromEntity(signalweekList);
+        LocalDate now = LocalDate.now();
+        SignalweekSchedule signalweekSchedule = signalweekScheduleRepository.findByDate(now)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.LIST_NOT_FOUND));
 
-        return signalweekFindAllResponse;
+        Page<Signalweek> signalweekList = signalweekRepository.findByTitleContainingAndSignalweekScheduleSeq(searchKeyword, signalweekSchedule.getSignalweekScheduleSeq(), PageRequest.of(page - 1, size, Sort.Direction.ASC, "signalweekSeq"));
+
+        FindAllSignalweekResponse findAllSignalweekResponse = FindAllSignalweekResponse.fromEntity(signalweekList);
+
+        return findAllSignalweekResponse;
     }
-    
     // 상세 조회
-    @Transactional(readOnly = true)
-    public SignalweekFindResponse findSignalweek(Integer signalweekSeq, Integer userSeq) {
+    @Transactional
+    public FindSignalweekResponse findSignalweek(Integer signalweekSeq, Integer userSeq) {
         Signalweek signalweek = signalweekRepository.findBySignalweekSeq(signalweekSeq)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND));
 
         boolean vote = signalweekVoteRepository.findBySignalweekSeqAndFromUserSeq(signalweekSeq, userSeq).isPresent();
 
-        return SignalweekFindResponse.builder()
+        //조회수 증가
+        if (!signalweekVoteHistoryRepository.findBySignalweekSeqAndUserSeq(signalweekSeq, userSeq).isPresent()){
+            signalweekVoteHistoryRepository.save(SignalweekVoteHistory.builder().signalweekSeq(signalweekSeq).userSeq(userSeq).build());
+            Integer view = signalweek.getView()+1;
+            signalweek.setView(view);
+            signalweekRepository.save(signalweek);
+        }
+
+        return FindSignalweekResponse.builder()
                 .title(signalweek.getTitle())
                 .pptUrl(signalweek.getPptFile().getUrl())
                 .readmeUrl(signalweek.getReadmeFile().getUrl())
                 .uccUrl(signalweek.getUccUrl())
                 .deployUrl(signalweek.getDeployUrl())
+                .content(signalweek.getContent())
                 .vote(vote)
                 .build();
     }
-
-
     // 투표
-
     @Transactional
-    public void registSignalweekVote(SignalweekVoteRequest signalweekVoteRequest) {
+    public boolean registSignalweekVote(RegistSignalweekVoteRequest registSignalweekVoteRequest) {
+        boolean res = false;
 
         if (signalweekVoteRepository.findBySignalweekSeqAndFromUserSeq(
-                signalweekVoteRequest.getSignalweekSeq(), signalweekVoteRequest.getUserSeq()).isPresent()) {
+                registSignalweekVoteRequest.getSignalweekSeq(), registSignalweekVoteRequest.getUserSeq()).isPresent()) {
             SignalweekVote signalweekVote = signalweekVoteRepository.findBySignalweekSeqAndFromUserSeq(
-                    signalweekVoteRequest.getSignalweekSeq(), signalweekVoteRequest.getUserSeq()).get();
+                    registSignalweekVoteRequest.getSignalweekSeq(), registSignalweekVoteRequest.getUserSeq()).get();
 
+            res = false;
             signalweekVoteRepository.delete(signalweekVote);
 
         } else {
+            int signalweekSeq = registSignalweekVoteRequest.getSignalweekSeq();
+            Signalweek signalweek = signalweekRepository.findById(signalweekSeq).get();
+
             SignalweekVote signalweekVote = SignalweekVote.builder()
-                    .signalweekSeq(signalweekVoteRequest.getSignalweekSeq())
-                    .fromUserSeq(signalweekVoteRequest.getUserSeq())
+                    .signalweekSeq(signalweekSeq)
+                    .fromUserSeq(registSignalweekVoteRequest.getUserSeq())
+                    .signalweekScheduleSeq(signalweek.getSignalweekScheduleSeq())
                     .build();
 
+            res = true;
             signalweekVoteRepository.save(signalweekVote);
-
         }
+        return res;
     }
-
-//     띵예의 전당
+    // 띵예의 전당
     @Transactional(readOnly = true)
-    public List<SignalweekRankFindResponse> findAllSiganlweekRank(Integer year, Integer quarter) {
-        List<SignalweekSchedule> signalweekScheduleList = signalweekScheduleRepository.findByYearAndQuarter(year,quarter);
-        Integer signalweekScheduleSeq = signalweekScheduleList.get(0).getSignalweekScheduleSeq();
+    public List<FindSignalweekRankResponse> findAllSiganlweekRank(Integer year, Integer quarter) {
+       SignalweekSchedule signalweekScheduleList = signalweekScheduleRepository.findByYearAndQuarter(year,quarter);
+        Integer signalweekScheduleSeq = signalweekScheduleList.getSignalweekScheduleSeq();
 
         List<SignalweekRank> signalweekRankList = signalweekRankRepository.findAllBySignalweekScheduleSeq(signalweekScheduleSeq);
 
-        List<SignalweekRankFindResponse> responseSignalweekRank = new ArrayList<>();
+        List<FindSignalweekRankResponse> responseSignalweekRank = new ArrayList<>();
 
         for (SignalweekRank signalweekRank:signalweekRankList) {
 
-            responseSignalweekRank.add(SignalweekRankFindResponse.builder()
+            responseSignalweekRank.add(FindSignalweekRankResponse.builder()
                     .rank(signalweekRank.getRanking())
                     .subject(signalweekRank.getSignalweek().getTitle())
                     .signalweekSeq(signalweekRank.getSignalweek().getSignalweekSeq())
@@ -213,9 +220,6 @@ public class SignalweekService {
 
         return responseSignalweekRank;
     }
-
-
-
     // 시그널 위크 엔딩 정산
     @Transactional
     public void endSignalweek() {
@@ -251,5 +255,35 @@ public class SignalweekService {
                 userHeartLogRepository.save(heartLog);
             }
         }
+    }
+    @Transactional
+    public FindAllSignalweekScheduleResponse findAllSignalweekSchedule(Integer page, Integer size){
+        Page<SignalweekSchedule> signalweekScheduleList = signalweekScheduleRepository.findAll(PageRequest.of(page - 1, size, Sort.by(Sort.Order.desc("quarter"), Sort.Order.desc("year"))));
+        return FindAllSignalweekScheduleResponse.builder()
+                .signalweekList(signalweekScheduleList.stream()
+                        .filter(signalweekSchedule -> {
+                            // 현재 투표 기간 중이면
+                            if (signalweekSchedule.getVoteEndDt().compareTo(LocalDate.now()) >= 0) return false;
+                            return true;
+                        })
+                        .map(FindAllSignalweekScheduleResponseItem::fromEntity)
+                        .collect(Collectors.toList()))
+                .count(signalweekScheduleList.getTotalElements()).build();
+    }
+
+    @Transactional(readOnly = true)
+    public FindSignalweekDateResponse findSignalweekSchedule() {
+        LocalDate now = LocalDate.now();
+        SignalweekSchedule signalweekSchedule = signalweekScheduleRepository.findByDate(now)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND));
+        return FindSignalweekDateResponse.fromEntity(signalweekSchedule);
+    }
+
+    @Transactional(readOnly = true)
+    public FindSignalweekDateResponse findSignalweekScheduleMain() {
+        LocalDate now = LocalDate.now();
+        SignalweekSchedule signalweekSchedule = signalweekScheduleRepository.findByPastDate(now)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND));
+        return FindSignalweekDateResponse.fromEntity(signalweekSchedule);
     }
 }

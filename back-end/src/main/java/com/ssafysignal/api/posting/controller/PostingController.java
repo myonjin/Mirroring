@@ -4,12 +4,9 @@ import com.ssafysignal.api.global.exception.NotFoundException;
 import com.ssafysignal.api.global.response.BasicResponse;
 import com.ssafysignal.api.global.response.ResponseCode;
 import com.ssafysignal.api.posting.dto.request.ApplySelectConfirmRequest;
-import com.ssafysignal.api.posting.dto.request.PostingBasicRequest;
-import com.ssafysignal.api.posting.dto.response.PostingFindAllByUserSeq;
-import com.ssafysignal.api.posting.dto.response.PostingFindAllResponse;
-import com.ssafysignal.api.posting.dto.response.PostingFindResponse;
+import com.ssafysignal.api.posting.dto.request.BasicPostingRequest;
+import com.ssafysignal.api.posting.dto.response.FindPostingResponse;
 import com.ssafysignal.api.posting.service.PostingService;
-import com.ssafysignal.api.project.entity.Project;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,12 +15,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,10 +57,8 @@ public class PostingController {
             @ApiResponse(responseCode = "400", description = "공고 등록 중 오류 발생"),
             @ApiResponse(responseCode = "401", description = "로그인 필요")})
     @PostMapping("")
-    private ResponseEntity<BasicResponse> registPosting(@Parameter(description = "공고 등록을 위한 정보") @RequestBody PostingBasicRequest postingRegistRequest) {
+    private ResponseEntity<BasicResponse> registPosting(@Parameter(description = "공고 등록을 위한 정보") @RequestBody BasicPostingRequest postingRegistRequest) {
         log.info("registPosting - Call");
-
-        System.out.println("postingRegistRequest = " + postingRegistRequest);
 
         try {
             postingService.registPosting(postingRegistRequest);
@@ -95,8 +88,8 @@ public class PostingController {
         if (fieldCode != null && !fieldCode.equals("")) searchKeys.put("fieldCode", fieldCode);
 
         try {
-            List<PostingFindAllResponse> postingFindAllResponseList = postingService.findAllPosting(page, size, searchKeys, postingSkillList);
-            return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, new HashMap<String, Object>(){{ put("postingList", postingFindAllResponseList); }}));
+            Map<String, Object> findAllPostingResponseList = postingService.findAllPosting(page, size, searchKeys, postingSkillList);
+            return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, findAllPostingResponseList));
         } catch (RuntimeException e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(BasicResponse.Body(ResponseCode.LIST_NOT_FOUND, null));
@@ -113,8 +106,8 @@ public class PostingController {
         log.info("findPosting - Call");
 
         try {
-            Project project = postingService.findPosting(postingSeq);
-            return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, PostingFindResponse.fromEntity(project)));
+            FindPostingResponse findPostingResponse = postingService.findPosting(postingSeq);
+            return ResponseEntity.ok().body(BasicResponse.Body(ResponseCode.SUCCESS, findPostingResponse));
         } catch (NotFoundException e) {
             return ResponseEntity.badRequest().body(BasicResponse.Body(e.getErrorCode(), null));
         }
@@ -128,7 +121,7 @@ public class PostingController {
             @ApiResponse(responseCode = "401", description = "로그인 필요")})
     @PutMapping("/{postingSeq}")
     private ResponseEntity<BasicResponse> modifyPosting(@Parameter(name = "postingSeq", description = "공고 Seq") @PathVariable("postingSeq") Integer postingSeq,
-                                                        @Parameter(description = "공고 등록을 위한 정보") @RequestBody PostingBasicRequest postingModifyRequest){
+                                                        @Parameter(description = "공고 등록을 위한 정보") @RequestBody BasicPostingRequest postingModifyRequest){
         log.info("modifyPosting - Call");
 
         log.info(String.valueOf(postingSeq));

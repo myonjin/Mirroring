@@ -9,10 +9,11 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
+@Builder
+@AllArgsConstructor
 @Table(name = "signalweek_rank")
 public class SignalweekRank {
     @Id
@@ -26,16 +27,10 @@ public class SignalweekRank {
     @Column(name = "ranking")
     private Integer ranking;
 
+    @Column(name = "signalweek_seq")
+    private Integer signalweekSeq;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "signalweek_seq")
+    @JoinColumn(name = "signalweek_seq", insertable = false, updatable = false)
     private Signalweek signalweek;
-
-    @Builder
-    public SignalweekRank(Integer signalweekRankSeq, Integer signalweekScheduleSeq, Integer ranking, Signalweek signalweek){
-        this.signalweekRankSeq = signalweekRankSeq;
-        this.signalweekScheduleSeq = signalweekScheduleSeq;
-        this.ranking = ranking;
-        this.signalweek = signalweek;
-    }
 }

@@ -11,13 +11,13 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
+@Builder
+@AllArgsConstructor
 @Table(name = "signalweek")
 public class Signalweek {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "signalweek_seq")
@@ -38,6 +38,9 @@ public class Signalweek {
     @Column(name = "content")
     private String content;
 
+    @Column(name = "view")
+    private Integer view;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "project_seq")
     private Project project;
@@ -50,18 +53,5 @@ public class Signalweek {
     @JoinColumn(name = "readme_file_seq")
     private ProjectFile readmeFile;
 
-    @Builder
-    public Signalweek(Integer signalweekSeq, Integer signalweekScheduleSeq, String title, Project project, String content,
-                      String uccUrl, String deployUrl, ProjectFile pptFile, ProjectFile readmeFile) {
-        this.signalweekSeq = signalweekSeq;
-        this.signalweekScheduleSeq = signalweekScheduleSeq;
-        this.title = title;
-        this.project = project;
-        this.content = content;
-        this.uccUrl = uccUrl;
-        this.deployUrl = deployUrl;
-        this.pptFile = pptFile;
-        this.readmeFile = readmeFile;
-    }
 
 }
